@@ -121,7 +121,7 @@ public_users.get("/async/author/:author", (req, res) => {
       return res.status(200).json(response.data);
     })
     .catch(() =>
-      res.status(500).json({ message: "Error retrieving books by author" }),
+      res.status(500).json({ message: "Error retrieving books by author" })
     );
 });
 
@@ -135,7 +135,9 @@ public_users.get("/async/title/:title", async (req, res) => {
     const response = await axios.get(`http://localhost:5000/title/${title}`);
 
     if (Object.keys(response.data).length === 0) {
-      return res.status(404).json({ message: "No books found with this title" });
+      return res
+        .status(404)
+        .json({ message: "No books found with this title" });
     }
 
     return res.status(200).json(response.data);
