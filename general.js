@@ -5,97 +5,143 @@ let books = require("./booksdb.js");
 
 const public_users = express.Router();
 
-// Task 1 — Get all books
+/***********************
+ *  TASK 1 — GET ALL BOOKS
+ ***********************/
 public_users.get("/", (req, res) => {
-  return res.send(JSON.stringify(books, null, 4));
+  return res.status(200).json(books);
 });
 
-// Task 2 — Get book by ISBN
+/***********************
+ *  TASK 2 — GET BY ISBN
+ ***********************/
 public_users.get("/isbn/:isbn", (req, res) => {
   const isbn = req.params.isbn;
-  if (books[isbn]) return res.send(books[isbn]);
-  return res.status(404).send("Book not found");
+
+  if (!books[isbn]) {
+    return res.status(404).json({ message: "Book not found" });
+  }
+
+  return res.status(200).json(books[isbn]);
 });
 
-// Task 3 — Get books by author
+/***********************
+ *  TASK 3 — GET BY AUTHOR
+ ***********************/
 public_users.get("/author/:author", (req, res) => {
   const author = req.params.author;
-  let output = {};
+  let result = {};
 
   Object.keys(books).forEach((key) => {
-    if (books[key].author === author) output[key] = books[key];
+    if (books[key].author === author) {
+      result[key] = books[key];
+    }
   });
 
-  return res.send(output);
+  if (Object.keys(result).length === 0) {
+    return res.status(404).json({ message: "No books found for this author" });
+  }
+
+  return res.status(200).json(result);
 });
 
-// Task 4 — Get books by title
+/***********************
+ *  TASK 4 — GET BY TITLE
+ ***********************/
 public_users.get("/title/:title", (req, res) => {
   const title = req.params.title;
-  let output = {};
+  let result = {};
 
   Object.keys(books).forEach((key) => {
-    if (books[key].title === title) output[key] = books[key];
+    if (books[key].title === title) {
+      result[key] = books[key];
+    }
   });
 
-  return res.send(output);
+  if (Object.keys(result).length === 0) {
+    return res.status(404).json({ message: "No books found with this title" });
+  }
+
+  return res.status(200).json(result);
 });
 
-// Task 5 — Get reviews
+/***********************
+ *  TASK 5 — GET REVIEWS
+ ***********************/
 public_users.get("/review/:isbn", (req, res) => {
   const isbn = req.params.isbn;
-  if (!books[isbn]) return res.status(404).send("Book not found");
-  return res.send(books[isbn].reviews);
+
+  if (!books[isbn]) {
+    return res.status(404).json({ message: "Book not found" });
+  }
+
+  return res.status(200).json(books[isbn].reviews);
 });
 
-/*** TASKS 10–13 (ASYNC / PROMISE + AXIOS SECTION) ***/
+/*********** TASKS 10–13 ************/
 
-// Task 10 — async/await + axios (get all books)
+/***********************
+ * TASK 10 — ASYNC/AWAIT + AXIOS GET ALL BOOKS
+ ***********************/
 public_users.get("/async/books", async (req, res) => {
   try {
-    const response = await Promise.resolve(books);
-    res.send(JSON.stringify(response, null, 4));
-  } catch (err) {
-    res.status(500).send("Error fetching books");
+    const response = await axios.get("http://localhost:5000/");
+    return res.status(200).json(response.data);
+  } catch (error) {
+    return res.status(500).json({ message: "Error fetching books" });
   }
 });
 
-// Task 11 — promise + axios (get by ISBN)
+/***********************
+ * TASK 11 — PROMISE CALLBACK + AXIOS GET BY ISBN
+ ***********************/
 public_users.get("/async/isbn/:isbn", (req, res) => {
   const isbn = req.params.isbn;
 
-  new Promise((resolve, reject) => {
-    if (books[isbn]) resolve(books[isbn]);
-    else reject("Book not found");
-  })
-    .then((data) => res.send(data))
-    .catch((err) => res.status(404).send(err));
+  axios
+    .get(`http://localhost:5000/isbn/${isbn}`)
+    .then((response) => res.status(200).json(response.data))
+    .catch(() => res.status(404).json({ message: "Book not found" }));
 });
 
-// Task 12 — promise + axios (get by author)
+/***********************
+ * TASK 12 — PROMISE CALLBACK + AXIOS GET BY AUTHOR
+ ***********************/
 public_users.get("/async/author/:author", (req, res) => {
   const author = req.params.author;
-  let result = {};
 
-  Object.keys(books).forEach((key) => {
-    if (books[key].author === author) result[key] = books[key];
-  });
-
-  Promise.resolve(result).then((data) =>
-    res.send(JSON.stringify(data, null, 4)),
-  );
+  axios
+    .get(`http://localhost:5000/author/${author}`)
+    .then((response) => {
+      if (Object.keys(response.data).length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No books found for this author" });
+      }
+      return res.status(200).json(response.data);
+    })
+    .catch(() =>
+      res.status(500).json({ message: "Error retrieving books by author" }),
+    );
 });
 
-// Task 13 — async/await + axios (get by title)
+/***********************
+ * TASK 13 — ASYNC/AWAIT + AXIOS GET BY TITLE
+ ***********************/
 public_users.get("/async/title/:title", async (req, res) => {
   const title = req.params.title;
-  let result = {};
 
-  Object.keys(books).forEach((key) => {
-    if (books[key].title === title) result[key] = books[key];
-  });
+  try {
+    const response = await axios.get(`http://localhost:5000/title/${title}`);
 
-  res.send(JSON.stringify(result, null, 4));
+    if (Object.keys(response.data).length === 0) {
+      return res.status(404).json({ message: "No books found with this title" });
+    }
+
+    return res.status(200).json(response.data);
+  } catch (error) {
+    return res.status(500).json({ message: "Error retrieving books by title" });
+  }
 });
 
 module.exports.general = public_users;
