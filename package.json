@@ -1,0 +1,11 @@
+{
+  "name": "book-review-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^4.22.1",
+    "express-session": "^1.19.0",
+    "jsonwebtoken": "^9.0.3"
+  }
+}
